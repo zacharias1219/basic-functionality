@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Chatbot</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>AI-Powered Chatbot</h1>
+        <textarea id="prompt" placeholder="Enter your prompt here..."></textarea>
+        <select id="model">
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            <option value="gpt-4">GPT-4</option>
+        </select>
+        <button onclick="sendPrompt()">Chat</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        async function sendPrompt() {
+            const prompt = document.getElementById('prompt').value;
+            const model = document.getElementById('model').value;
+            const responseDiv = document.getElementById('response');
+
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt, model })
+            });
+
+            const data = await response.json();
+            responseDiv.innerHTML = `<p>${data.response}</p>`;
+        }
+    </script>
+</body>
+</html>
