@@ -1,6 +1,7 @@
 import streamlit as st
 import openai
 from pymongo import MongoClient
+from bson import ObjectId
 from ai import generate_response
 from models import Chatbot
 from integrators import salesforce, hubspot, mailchimp
