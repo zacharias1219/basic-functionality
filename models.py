@@ -1,21 +1,41 @@
-from flask_admin import Admin
-from flask_admin.contrib.sqla import ModelView
-from flask_sqlalchemy import SQLAlchemy
-from flask import Flask
+from pymongo import MongoClient
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///knowledge_base.db'
-db = SQLAlchemy(app)
-admin = Admin(app)
+# MongoDB setup
+client = MongoClient('mongodb://localhost:27017/')
+db = client['chatbot_project']
 
-class KnowledgeBase(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    question = db.Column(db.String(200))
-    answer = db.Column(db.String(2000))
+# KnowledgeBase collection
+knowledge_base = db['knowledge_base']
 
-admin.add_view(ModelView(KnowledgeBase, db.session))
+class KnowledgeBase:
+    def __init__(self, question, answer):
+        self.question = question
+        self.answer = answer
 
-db.create_all()
+    def save_to_db(self):
+        knowledge_base.insert_one({
+            "question": self.question,
+            "answer": self.answer
+        })
+
+    @staticmethod
+    def find_by_question(question):
+        return knowledge_base.find_one({"question": question})
+
+    @staticmethod
+    def get_all():
+        return knowledge_base.find()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Example usage
+    kb_item = KnowledgeBase(question="What is AI?", answer="AI stands for Artificial Intelligence.")
+    kb_item.save_to_db()
+
+    # Fetching an item
+    result = KnowledgeBase.find_by_question("What is AI?")
+    if result:
+        print(f"Question: {result['question']}, Answer: {result['answer']}")
+
+    # Fetching all items
+    for item in KnowledgeBase.get_all():
+        print(f"Question: {item['question']}, Answer: {item['answer']}")
