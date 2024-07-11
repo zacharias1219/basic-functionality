@@ -67,7 +67,7 @@ for item in st.session_state['knowledge_base']:
 st.header("Create Your AI-Powered Chatbot")
 
 # User inputs
-user_id = st.text_input("User ID")
+email_id = st.text_input("Email:")
 
 # AI model selection
 model = st.selectbox("Choose AI Model", ["gpt-3.5-turbo", "gpt-4", "claude", "opus", "gemini", "llama-3"])
@@ -101,7 +101,7 @@ if st.button("Create Chatbot"):
     }
 
     chatbot_data = {
-        "user_id": user_id,
+        "email": email_id,
         "model": model,
         "settings": settings,
         "integrations": integrations,
