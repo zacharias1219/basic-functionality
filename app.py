@@ -1,47 +1,55 @@
-from flask import Flask, request, jsonify, render_template
+import streamlit as st
 import openai
 from pymongo import MongoClient
-from models import db, KnowledgeBase
+from ai import generate_response
+from models import Chatbot
+from integrators import salesforce, hubspot, mailchimp
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///knowledge_base.db'
-db.init_app(app)
-
-client = MongoClient('mongodb://localhost:27017/')
-db_mongo = client['chatbot']
-leads_collection = db_mongo['leads']
-
+# Set your OpenAI API key
 openai.api_key = 'YOUR_OPENAI_API_KEY'
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+# MongoDB setup
+client = MongoClient('mongodb://localhost:27017/')
+db_mongo = client['chatbot_project']
+chatbots_collection = db_mongo['chatbots']
 
-@app.route('/chat', methods=['POST'])
-def chat():
-    data = request.json
-    prompt = data.get('prompt')
-    model = data.get('model', 'gpt-3.5-turbo')
-    response = openai.Completion.create(engine=model, prompt=prompt, max_tokens=150)
-    return jsonify({'response': response.choices[0].text.strip()})
+# Streamlit App
+st.title("AI-Powered Chatbot Creator")
 
-@app.route('/lead', methods=['POST'])
-def lead():
-    data = request.json
-    name = data.get('name')
-    email = data.get('email')
-    leads_collection.insert_one({'name': name, 'email': email})
-    return jsonify({'message': 'Lead captured successfully'})
+st.header("Create Your AI-Powered Chatbot")
 
-@app.route('/faq', methods=['POST'])
-def faq():
-    data = request.json
-    question = data.get('question')
-    kb_item = KnowledgeBase.query.filter_by(question=question).first()
-    if kb_item:
-        return jsonify({'answer': kb_item.answer})
-    else:
-        return jsonify({'answer': 'I do not know the answer to that question.'})
+# User inputs
+user_id = st.text_input("User ID")
+model = st.selectbox("Choose AI Model", ["gpt-3.5-turbo", "gpt-4"])
+settings = st.text_area("Chatbot Settings (JSON)", '{"language": "en", "tone": "friendly"}')
+integrations = st.text_area("Integrations (JSON)", '{"hubspot": {"api_key": "your_api_key"}}')
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if st.button("Create Chatbot"):
+    chatbot_data = {
+        "user_id": user_id,
+        "model": model,
+        "settings": settings,
+        "integrations": integrations
+    }
+    
+    # Save chatbot to MongoDB
+    chatbots_collection.insert_one(chatbot_data)
+    
+    # Generate code snippet
+    chatbot_id = str(chatbot_data['_id'])
+    code_snippet = f'<script src="https://yourdomain.com/chatbot.js?chatbot_id={chatbot_id}"></script>'
+    st.success("Chatbot created successfully!")
+    st.code(code_snippet, language='html')
+
+# Testing the chatbot
+st.header("Test Your Chatbot")
+
+chatbot_id = st.text_input("Chatbot ID")
+prompt = st.text_area("Prompt")
+
+if st.button("Get Response"):
+    # Fetch chatbot settings from MongoDB
+    chatbot = chatbots_collection.find_one({"_id": ObjectId(chatbot_id)})
+    model = chatbot["model"]
+    response = generate_response(prompt, model)
+    st.write(response)
