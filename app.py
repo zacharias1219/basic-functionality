@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 import requests
-from backend.utils.parser import parse_pdf, parse_word, parse_image, parse_website
+from backend.utils.parser import parse_pdf, parse_word, parse_website
 
 # Initialize session state for integrations and knowledge base
 if 'integrations' not in st.session_state:
@@ -22,7 +22,7 @@ st.header("Manage Knowledge Base")
 
 # File upload section
 st.subheader("Upload Files to Knowledge Base")
-kb_file = st.file_uploader("Upload File", type=["pdf", "docx", "jpg", "jpeg", "png"])
+kb_file = st.file_uploader("Upload File", type=["pdf", "docx"])
 
 if st.button("Add File to Knowledge Base"):
     if kb_file:
@@ -30,8 +30,6 @@ if st.button("Add File to Knowledge Base"):
             content = parse_pdf(kb_file)
         elif kb_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
             content = parse_word(kb_file)
-        elif kb_file.type in ["image/jpeg", "image/png"]:
-            content = parse_image(kb_file)
         else:
             st.error("Unsupported file type.")
             st.stop()
