@@ -1,7 +1,18 @@
 import streamlit as st
 import json
 import requests
-from utils.parser import parse_pdf, parse_word, parse_image, parse_website
+from backend.utils.parser import parse_pdf, parse_word, parse_image, parse_website
+
+# Initialize session state for integrations and knowledge base
+if 'integrations' not in st.session_state:
+    st.session_state['integrations'] = {
+        'hubspot': '',
+        'mailchimp': '',
+        'salesforce': ''
+    }
+
+if 'knowledge_base' not in st.session_state:
+    st.session_state['knowledge_base'] = []
 
 # Streamlit App
 st.title("AI-Powered Chatbot Creator")
@@ -41,9 +52,6 @@ if st.button("Add URL to Knowledge Base"):
 # Display knowledge base entries
 st.subheader("Knowledge Base Entries")
 
-if 'knowledge_base' not in st.session_state:
-    st.session_state['knowledge_base'] = []
-
 for item in st.session_state['knowledge_base']:
     st.write(f"**Format:** {item['format']}")
     st.write(f"**Content:** {item['content'][:500]}...")  # Displaying first 500 characters for brevity
@@ -68,11 +76,11 @@ tone = st.selectbox("Tone", ["Friendly", "Professional", "Casual"])
 integration_type = st.selectbox("Integration Type", ["HubSpot", "MailChimp", "Salesforce"])
 
 if integration_type == "HubSpot":
-    st.session_state['integrations']['hubspot'] = st.text_input("HubSpot API Key", st.session_state['integrations']['hubspot'])
+    st.session_state['integrations']['hubspot'] = st.text_input("HubSpot User ID", st.session_state['integrations']['hubspot'])
 elif integration_type == "MailChimp":
-    st.session_state['integrations']['mailchimp'] = st.text_input("MailChimp API Key", st.session_state['integrations']['mailchimp'])
+    st.session_state['integrations']['mailchimp'] = st.text_input("MailChimp User ID", st.session_state['integrations']['mailchimp'])
 elif integration_type == "Salesforce":
-    st.session_state['integrations']['salesforce'] = st.text_input("Salesforce API Key", st.session_state['integrations']['salesforce'])
+    st.session_state['integrations']['salesforce'] = st.text_input("Salesforce User ID", st.session_state['integrations']['salesforce'])
 
 if st.button("Create Chatbot"):
     settings = {
@@ -81,9 +89,9 @@ if st.button("Create Chatbot"):
     }
 
     integrations = {
-        "hubspot": {"api_key": st.session_state['integrations']['hubspot']},
-        "mailchimp": {"api_key": st.session_state['integrations']['mailchimp']},
-        "salesforce": {"api_key": st.session_state['integrations']['salesforce']}
+        "hubspot": {"user_id": st.session_state['integrations']['hubspot']},
+        "mailchimp": {"user_id": st.session_state['integrations']['mailchimp']},
+        "salesforce": {"user_id": st.session_state['integrations']['salesforce']}
     }
 
     chatbot_data = {
@@ -107,20 +115,7 @@ if st.button("Create Chatbot"):
     if response.status_code == 200:
         st.success("Chatbot successfully created on the server!")
         chatbot_id = response.json().get("chatbot_id")
-        code_snippet = f'<script src="https://yourserver.com/chatbot.js?chatbot_id={chatbot_id}"></script>'
+        code_snippet = f'<iframe src="https://yourserver.com/chatbot?chatbot_id={chatbot_id}" width="300" height="500"></iframe>'
         st.code(code_snippet, language='html')
     else:
         st.error(f"Failed to create chatbot on the server: {response.text}")
-
-# Testing the chatbot
-st.header("Test Your Chatbot")
-
-chatbot_id = st.text_input("Chatbot ID for Testing")
-prompt = st.text_area("Prompt")
-
-if st.button("Get Response"):
-    response = requests.post('http://localhost:8000/api/chatbot_interact', json={"chatbot_id": chatbot_id, "user_query": prompt})
-    if response.status_code == 200:
-        st.write(response.json().get("response"))
-    else:
-        st.error(f"Failed to get response: {response.text}")
