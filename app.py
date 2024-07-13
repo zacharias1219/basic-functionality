@@ -1,24 +1,7 @@
 import streamlit as st
-import openai
 import json
 import requests
-from ai import generate_response
 from utils.parser import parse_pdf, parse_word, parse_image, parse_website
-
-# Set your OpenAI API key
-openai.api_key = 'YOUR_OPENAI_API_KEY'
-
-# Initialize session state for integrations
-if 'integrations' not in st.session_state:
-    st.session_state['integrations'] = {
-        'hubspot': '',
-        'mailchimp': '',
-        'salesforce': ''
-    }
-
-# Initialize session state for knowledge base
-if 'knowledge_base' not in st.session_state:
-    st.session_state['knowledge_base'] = []
 
 # Streamlit App
 st.title("AI-Powered Chatbot Creator")
@@ -58,6 +41,9 @@ if st.button("Add URL to Knowledge Base"):
 # Display knowledge base entries
 st.subheader("Knowledge Base Entries")
 
+if 'knowledge_base' not in st.session_state:
+    st.session_state['knowledge_base'] = []
+
 for item in st.session_state['knowledge_base']:
     st.write(f"**Format:** {item['format']}")
     st.write(f"**Content:** {item['content'][:500]}...")  # Displaying first 500 characters for brevity
@@ -70,7 +56,7 @@ st.header("Create Your AI-Powered Chatbot")
 email_id = st.text_input("Email:")
 
 # AI model selection
-model = st.selectbox("Choose AI Model", ["gpt-3.5-turbo", "gpt-4", "claude", "opus", "gemini", "llama-3"])
+model = st.selectbox("Choose AI Model", ["llama3", "mistral", "gemma7b", "starling"])
 
 # Language selection
 language = st.selectbox("Language", ["English", "French", "German", "Spanish", "Chinese", "Japanese"])
@@ -116,11 +102,13 @@ if st.button("Create Chatbot"):
     st.json(chatbot_json)
 
     # Send JSON data to server
-    # Replace 'http://yourserver.com/api/create_chatbot' with your actual backend endpoint
-    response = requests.post('http://yourserver.com/api/create_chatbot', json=chatbot_data)
+    response = requests.post('http://localhost:8000/api/create_chatbot', json=chatbot_data)
     
     if response.status_code == 200:
         st.success("Chatbot successfully created on the server!")
+        chatbot_id = response.json().get("chatbot_id")
+        code_snippet = f'<script src="https://yourserver.com/chatbot.js?chatbot_id={chatbot_id}"></script>'
+        st.code(code_snippet, language='html')
     else:
         st.error(f"Failed to create chatbot on the server: {response.text}")
 
@@ -131,5 +119,8 @@ chatbot_id = st.text_input("Chatbot ID for Testing")
 prompt = st.text_area("Prompt")
 
 if st.button("Get Response"):
-    response = generate_response(prompt, model)
-    st.write(response)
+    response = requests.post('http://localhost:8000/api/chatbot_interact', json={"chatbot_id": chatbot_id, "user_query": prompt})
+    if response.status_code == 200:
+        st.write(response.json().get("response"))
+    else:
+        st.error(f"Failed to get response: {response.text}")

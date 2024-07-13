@@ -1,23 +1,19 @@
-import requests
-from bs4 import BeautifulSoup
+# utils/parser.py
 import pdfplumber
 from docx import Document
 from PIL import Image
 import pytesseract
-from io import BytesIO
+import requests
+from bs4 import BeautifulSoup
 
 def parse_pdf(file):
     with pdfplumber.open(file) as pdf:
-        text = ''
-        for page in pdf.pages:
-            text += page.extract_text()
+        text = ''.join(page.extract_text() for page in pdf.pages)
     return text
 
 def parse_word(file):
     doc = Document(file)
-    text = ''
-    for para in doc.paragraphs:
-        text += para.text + '\n'
+    text = ''.join(para.text for para in doc.paragraphs)
     return text
 
 def parse_image(file):
@@ -28,5 +24,4 @@ def parse_image(file):
 def parse_website(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
-    text = soup.get_text()
-    return text
+    return soup.get_text()
