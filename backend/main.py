@@ -1,14 +1,19 @@
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from bson import ObjectId
-
-from backend.models.chatbot import ChatbotConfig
-from backend.services.chatbot_service import create_chatbot, interact_with_chatbot, handle_integrations
+from services.chatbot_service import create_chatbot, interact_with_chatbot, handle_integrations
 
 app = FastAPI()
 
+class ChatbotRequest(BaseModel):
+    email: str
+    model: str
+    settings: dict
+    integrations: dict
+    knowledge_base: list
+
 @app.post("/api/create_chatbot")
-async def create_chatbot_endpoint(config: ChatbotConfig):
+async def create_chatbot_endpoint(config: ChatbotRequest):
     try:
         result = create_chatbot(config)
         handle_integrations(config.integrations, {"email": config.email})

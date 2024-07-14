@@ -6,6 +6,8 @@ from services.embedding_service import embed_text
 from services.integrators.hubspot_service import sync_hubspot
 from services.integrators.mailchimp_service import sync_mailchimp
 from services.integrators.salesforce_service import sync_salesforce
+from services.chromadb_service import add_document, search_documents
+from bson import ObjectId
 
 def create_chatbot(config: ChatbotConfig):
     config_dict = config.dict()
@@ -13,23 +15,27 @@ def create_chatbot(config: ChatbotConfig):
     
     for item in config.knowledge_base:
         content = item['content']
-        index_document(content)
+        embedding = embed_text(content)
+        metadata = {"title": item['title'], "format": item['format']}
+        add_document(item['id'], embedding, metadata)
 
     return {"chatbot_id": str(result.inserted_id)}
 
 def interact_with_chatbot(chatbot_id, user_query):
-    chatbot = db.chatbots.find_one({"_id": chatbot_id})
+    chatbot = db.chatbots.find_one({"_id": ObjectId(chatbot_id)})
     if not chatbot:
         raise ValueError("Chatbot not found")
 
-    documents = retrieve_documents(user_query)
-    response = generate_response(chatbot['model'], user_query, documents)
+    query_embedding = embed_text(user_query)
+    documents = search_documents(query_embedding)
+    context = " ".join([doc["metadata"]["content"] for doc in documents])
+    response = generate_response(chatbot['model'], user_query, context)
     return response
 
 def handle_integrations(integrations, data):
     if 'hubspot' in integrations:
-        sync_hubspot(integrations['hubspot']['api_key'], data)
+        sync_hubspot(integrations['hubspot']['user_id'], data)
     if 'mailchimp' in integrations:
-        sync_mailchimp(integrations['mailchimp']['api_key'], integrations['mailchimp']['list_id'], data)
+        sync_mailchimp(integrations['mailchimp']['user_id'], data)
     if 'salesforce' in integrations:
-        sync_salesforce(integrations['salesforce']['api_key'], integrations['salesforce']['instance_url'], data)
+        sync_salesforce(integrations['salesforce']['user_id'], data)

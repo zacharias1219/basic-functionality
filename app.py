@@ -3,16 +3,10 @@ import json
 import requests
 from backend.utils.parser import parse_pdf, parse_word, parse_website
 
-# Initialize session state for integrations and knowledge base
-if 'integrations' not in st.session_state:
-    st.session_state['integrations'] = {
-        'hubspot': '',
-        'mailchimp': '',
-        'salesforce': ''
-    }
-
-if 'knowledge_base' not in st.session_state:
-    st.session_state['knowledge_base'] = []
+# Initialize Chroma client
+import chromadb
+client = chromadb.Client()
+collection = client.create_collection(name="documents")
 
 # Streamlit App
 st.title("AI-Powered Chatbot Creator")
@@ -34,7 +28,13 @@ if st.button("Add File to Knowledge Base"):
             st.error("Unsupported file type.")
             st.stop()
 
-        st.session_state['knowledge_base'].append({"format": kb_file.type, "content": content})
+        doc_id = f"doc_{len(st.session_state.get('knowledge_base', [])) + 1}"
+        embedding = [0.1, 0.2, 0.3]  # Replace with actual embedding generation
+        metadata = {"title": kb_file.name, "content": content, "format": kb_file.type}
+        
+        collection.add({"id": doc_id, "embedding": embedding, "metadata": metadata})
+        
+        st.session_state['knowledge_base'] = st.session_state.get('knowledge_base', []) + [{"id": doc_id, "embedding": embedding, "metadata": metadata}]
         st.success("Added file to Knowledge Base")
 
 # URL section
