@@ -34,6 +34,6 @@ def send_verification_email(name, email, chatbot_id):
             server.starttls()
             server.login(os.getenv('EMAIL_USER'), os.getenv('EMAIL_PASSWORD'))
             server.send_message(msg)
-        print(f"Verification email sent to {email}.")
+        return f"Verification email sent to {email}."
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        return f"Failed to send email: {e}"

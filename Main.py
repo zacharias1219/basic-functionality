@@ -104,8 +104,8 @@ if st.button('Submit'):
         st.write(f"Chatbot created with ID: {chatbot_id}")
 
         # Sending verification email
-        send_verification_email(name, email, chatbot_id)
-        st.success(f"Verification email sent to {email}.")
+        mail_status = send_verification_email(name, email, chatbot_id)
+        st.success(mail_status)
         # Storing the parameters
         response = requests.post('http://localhost:8000/api/create_chatbot', json=chatbot_config)
         if response.status_code == 200:
