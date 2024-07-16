@@ -1,6 +1,6 @@
 streamlit
 fastapi
-uvicor
+uvicorn
 request
 pydanti
 pyyaml
