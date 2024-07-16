@@ -17,4 +17,4 @@ langchain_community.document_loaders
 faiss-cpu
 httpx
 PyPDF2
-huggingface-hub=
+huggingface-hub
