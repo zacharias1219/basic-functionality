@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import yaml
 from utils.parser import parse_pdf, parse_word, parse_website
-from backend.bot import create_chatbot, interact_with_chatbot, store_chatbot_config
+from utils.bot import store_chatbot_config
 from utils.mail import send_verification_email
 
 # Page setup
