@@ -1,22 +1,32 @@
 import streamlit as st
-import json
 import requests
+import yaml
 from utils.parser import parse_pdf, parse_word, parse_website
+from backend.bot import create_chatbot, interact_with_chatbot, store_chatbot_config
+from backend.mail import send_verification_email
 
-# Initialize Chroma client
-import chromadb
-client = chromadb.Client()
-collection = client.create_collection(name="documents")
+# Page setup
+st.set_page_config(page_title="Autoserve", page_icon="🤖", layout="centered", initial_sidebar_state="collapsed")
 
-# Streamlit App
-st.title("AI-Powered Chatbot Creator")
+# Initialize session state for knowledge base and integrations
+if 'knowledge_base' not in st.session_state:
+    st.session_state['knowledge_base'] = []
 
-# Knowledge Base Management
-st.header("Manage Knowledge Base")
+if 'integrations' not in st.session_state:
+    st.session_state['integrations'] = {
+        'hubspot': '',
+        'mailchimp': '',
+        'salesforce': ''
+    }
+
+# Inputs from the user
+st.title("Create Your AI-Powered Chatbot")
+name = st.text_input("Name")
+email = st.text_input("Email")
 
 # File upload section
-st.subheader("Upload Files to Knowledge Base")
-kb_file = st.file_uploader("Upload File", type=["pdf", "docx"])
+st.header("Upload Files to Knowledge Base")
+kb_file = st.file_uploader("Upload File", type=["pdf", "docx", "txt"])
 
 if st.button("Add File to Knowledge Base"):
     if kb_file:
@@ -28,49 +38,28 @@ if st.button("Add File to Knowledge Base"):
             st.error("Unsupported file type.")
             st.stop()
 
-        doc_id = f"doc_{len(st.session_state.get('knowledge_base', [])) + 1}"
-        embedding = [0.1, 0.2, 0.3]  # Replace with actual embedding generation
-        metadata = {"title": kb_file.name, "content": content, "format": kb_file.type}
-        
-        collection.add({"id": doc_id, "embedding": embedding, "metadata": metadata})
-        
-        st.session_state['knowledge_base'] = st.session_state.get('knowledge_base', []) + [{"id": doc_id, "embedding": embedding, "metadata": metadata}]
+        st.session_state['knowledge_base'].append({"format": kb_file.type, "content": content})
         st.success("Added file to Knowledge Base")
 
 # URL section
-st.subheader("Add URLs to Knowledge Base")
+st.header("Add URLs to Knowledge Base")
 kb_url = st.text_input("Enter URL")
 
 if st.button("Add URL to Knowledge Base"):
     if kb_url:
         content = parse_website(kb_url)
-        st.session_state['knowledge_base'].append({"format": "url", "content": content})
+        st.session_state['knowledge_base'].append({"name": kb_url, "content": content})
         st.success("Added URL to Knowledge Base")
 
-# Display knowledge base entries
-st.subheader("Knowledge Base Entries")
 
-for item in st.session_state['knowledge_base']:
-    st.write(f"**Format:** {item['format']}")
-    st.write(f"**Content:** {item['content'][:500]}...")  # Displaying first 500 characters for brevity
-    st.write("---")
-
-# Chatbot Creation
-st.header("Create Your AI-Powered Chatbot")
-
-# User inputs
-email_id = st.text_input("Email:")
-
-# AI model selection
-model = st.selectbox("Choose AI Model", ["llama3", "mistral", "gemma7b", "starling"])
-
-# Language selection
-language = st.selectbox("Language", ["English", "French", "German", "Spanish", "Chinese", "Japanese"])
-
-# Tone selection
+# Model configuration
+st.header("Configure Your Chatbot")
+model = st.selectbox("Choose AI Model", ["llama3", "gemma2" , "qwen2", "mistral"])
+language = st.selectbox("Language", ["English", "French", "German", "Spanish"])
 tone = st.selectbox("Tone", ["Friendly", "Professional", "Casual"])
 
 # Integration selection
+st.header("Integration Configuration")
 integration_type = st.selectbox("Integration Type", ["HubSpot", "MailChimp", "Salesforce"])
 
 if integration_type == "HubSpot":
@@ -80,7 +69,8 @@ elif integration_type == "MailChimp":
 elif integration_type == "Salesforce":
     st.session_state['integrations']['salesforce'] = st.text_input("Salesforce User ID", st.session_state['integrations']['salesforce'])
 
-if st.button("Create Chatbot"):
+# Submit button
+if st.button('Submit'):
     settings = {
         "language": language.lower(),
         "tone": tone.lower()
@@ -92,28 +82,34 @@ if st.button("Create Chatbot"):
         "salesforce": {"user_id": st.session_state['integrations']['salesforce']}
     }
 
-    chatbot_data = {
-        "email": email_id,
+    chatbot_config = {
+        "name": name,
+        "email": email,
+        "knowledge_base": st.session_state['knowledge_base'],
         "model": model,
         "settings": settings,
-        "integrations": integrations,
-        "knowledge_base": st.session_state['knowledge_base']
+        "integrations": integrations
     }
     
-    # Convert chatbot data to JSON
-    chatbot_json = json.dumps(chatbot_data, indent=4)
-    
-    # Display JSON
-    st.success("Chatbot created successfully!")
-    st.json(chatbot_json)
+    st.write("Your chatbot configuration:")
+    st.json(chatbot_config)
 
-    # Send JSON data to server
-    response = requests.post('http://localhost:8000/api/create_chatbot', json=chatbot_data)
+    # Save configuration to YAML
+    with open('details.yaml', 'w') as file:
+        yaml.dump(chatbot_config, file)
     
-    if response.status_code == 200:
-        st.success("Chatbot successfully created on the server!")
-        chatbot_id = response.json().get("chatbot_id")
-        code_snippet = f'<iframe src="https://yourserver.com/chatbot?chatbot_id={chatbot_id}" width="300" height="500"></iframe>'
-        st.code(code_snippet, language='html')
-    else:
-        st.error(f"Failed to create chatbot on the server: {response.text}")
+    st.write("You can add more files/URLs or change any configuration.")
+    if st.button('Verify and Submit'):
+        chatbot_id = store_chatbot_config(chatbot_config)
+        st.write(f"Chatbot created with ID: {chatbot_id}")
+
+        # Sending verification email
+        send_verification_email(name, email, chatbot_id)
+        st.success(f"Verification email sent to {email}.")
+        # Storing the parameters
+        response = requests.post('http://localhost:8000/api/create_chatbot', json=chatbot_config)
+        if response.status_code == 200:
+            st.success("Chatbot configuration submitted successfully!")
+            st.write("A verification email has been sent to you.")
+        else:
+            st.error("Failed to submit chatbot configuration.")
