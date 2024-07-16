@@ -33,5 +33,3 @@ def send_verification_email(name, email, chatbot_id):
         server.starttls()
         server.login(os.getenv('EMAIL_USER'), os.getenv('EMAIL_PASSWORD'))
         server.send_message(msg)
-
-send_verification_email("Richard","rickoshade1891@gmail.com","123458")
