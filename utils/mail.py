@@ -29,7 +29,11 @@ def send_verification_email(name, email, chatbot_id):
     msg['Subject'] = 'Your AI-Powered Chatbot'
     msg.attach(MIMEText(body, 'plain'))
     
-    with smtplib.SMTP('smtp.gmail.com', 587) as server:
-        server.starttls()
-        server.login(os.getenv('EMAIL_USER'), os.getenv('EMAIL_PASSWORD'))
-        server.send_message(msg)
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(os.getenv('EMAIL_USER'), os.getenv('EMAIL_PASSWORD'))
+            server.send_message(msg)
+        print(f"Verification email sent to {email}.")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
