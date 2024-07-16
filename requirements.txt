@@ -1,9 +1,9 @@
 streamlit
-fastap
+fastapi
 uvicor
 request
 pydanti
-pyya
+pyyaml
 python-dotenv
 langchain_groq
 langchain
