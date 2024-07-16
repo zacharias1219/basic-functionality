@@ -1,7 +1,7 @@
 streamlit
 fastapi
 uvicorn
-request
+requests
 pydanti
 pyyaml
 python-dotenv
