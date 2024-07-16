@@ -2,7 +2,7 @@ streamlit
 fastapi
 uvicorn
 requests
-pydanti
+pydantic
 pyyaml
 python-dotenv
 langchain_groq
