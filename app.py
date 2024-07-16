@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 import requests
-from backend.utils.parser import parse_pdf, parse_word, parse_website
+from utils.parser import parse_pdf, parse_word, parse_website
 
 # Initialize Chroma client
 import chromadb

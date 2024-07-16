@@ -8,11 +8,15 @@ db = client.chatbot_database
 
 # Chroma Client
 chroma_client = chromadb.Client()
-collection = chroma_client.create_collection(name="documents")
 
-def add_document_to_chroma(doc_id, embedding, metadata):
-    collection.add({"id": doc_id, "embedding": embedding, "metadata": metadata})
+def initialize_collection():
+    try:
+        chroma_client.create_collection(name="documents")
+    except chromadb.db.base.UniqueConstraintError:
+        pass  # Collection already exists
+    except ValueError:
+        pass  # Collection already exists in another way
 
-def query_chroma(query_embedding, top_k=5):
-    results = collection.query(query_embedding=query_embedding, top_k=top_k)
-    return results
+initialize_collection()
+
+collection = chroma_client.get_collection(name="documents")
