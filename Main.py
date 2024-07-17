@@ -99,13 +99,9 @@ if st.button('Submit'):
         yaml.dump(chatbot_config, file)
     
     st.write("You can add more files/URLs or change any configuration.")
+    chatbot_id = store_chatbot_config(chatbot_config)
+    st.write(f"Chatbot created with ID: {chatbot_id}")
     if st.button('Verify and Submit'):
-        chatbot_id = store_chatbot_config(chatbot_config)
-        st.write(f"Chatbot created with ID: {chatbot_id}")
-
-        # Sending verification email
-        mail_status = send_verification_email(name, email, chatbot_id)
-        st.success(mail_status)
         # Storing the parameters
         response = requests.post('http://localhost:8000/api/create_chatbot', json=chatbot_config)
         if response.status_code == 200:
@@ -113,3 +109,6 @@ if st.button('Submit'):
             st.write("A verification email has been sent to you.")
         else:
             st.error("Failed to submit chatbot configuration.")
+    # Sending verification email
+    mail_status = send_verification_email(name, email, chatbot_id)
+    st.success(mail_status)
