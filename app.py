@@ -165,7 +165,7 @@ def main() -> None:
     with input2:
         email = st.text_input("Email")
 
-    st.divider()
+        st.divider()
 
     col1, col2 = st.columns([1.5, 2])
 
