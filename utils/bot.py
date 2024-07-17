@@ -80,4 +80,4 @@ def interact_with_rag_bot(user_query, model):
         ]
     )
 
-    return response.choices[0].message['content']
+    return response['choices'][0]['message']['content']
