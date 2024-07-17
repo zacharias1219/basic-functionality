@@ -8,12 +8,14 @@ import yaml
 from bs4 import BeautifulSoup
 from groq import Groq
 from typing import List, Any, Optional, Dict, Tuple
+import chardet
+import pdfplumber
 
 from utils.bot import store_chatbot_config
 from utils.mail import send_verification_email
-from utils.parser import parse_pdf, parse_word, parse_website
+from utils.parser import parse_pdf, parse_website
 
-from langchain_community.document_loaders import UnstructuredPDFLoader
+from langchain_community.document_loaders import UnstructuredFileLoader
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
@@ -71,10 +73,10 @@ def create_vector_db(content: str) -> Chroma:
     logger.info("Creating vector DB from content")
     temp_dir = tempfile.mkdtemp()
 
-    with open(os.path.join(temp_dir, "temp.txt"), "w") as f:
+    with open(os.path.join(temp_dir, "temp.txt"), "w", encoding='utf-8') as f:
         f.write(content)
         logger.info("Content saved to temporary file")
-        loader = UnstructuredPDFLoader(os.path.join(temp_dir, "temp.txt"))
+        loader = UnstructuredFileLoader(os.path.join(temp_dir, "temp.txt"))
         data = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=7500, chunk_overlap=100)
@@ -165,7 +167,7 @@ def main() -> None:
     with input2:
         email = st.text_input("Email")
 
-        st.divider()
+    st.divider()
 
     col1, col2 = st.columns([1.5, 2])
 
@@ -195,22 +197,36 @@ def main() -> None:
         st.session_state["selected_model"] = selected_model
 
     with col1:
-        file_upload = st.file_uploader("Upload a PDF file ↓", type=["pdf", "docx", "txt"], accept_multiple_files=False)
+        file_upload = st.file_uploader("Upload a file ↓", type=["pdf", "txt"], accept_multiple_files=False)
         if file_upload:
             st.session_state["file_upload"] = file_upload
-            if st.session_state["vector_db"] is None:
-                content = file_upload.read().decode("utf-8")
-                st.session_state["vector_db"] = create_vector_db(content)
+            try:
+                if file_upload.type == "application/pdf":
+                    content = parse_pdf(file_upload)
+                else:
+                    raw_content = file_upload.read()
+                    encoding = chardet.detect(raw_content)['encoding']
+                    content = raw_content.decode(encoding)
+
+                if st.session_state["vector_db"] is None:
+                    st.session_state["vector_db"] = create_vector_db(content)
+            except UnicodeDecodeError as e:
+                st.error(f"Could not decode file using {encoding} encoding.")
+                logger.error(f"UnicodeDecodeError: {str(e)}")
+                return
+            except Exception as e:
+                st.error(f"Error processing file: {str(e)}")
+                logger.error(f"Error processing file: {str(e)}")
+                return
 
         if st.button("Add File to Knowledge Base"):
             if file_upload:
                 if file_upload.type == "application/pdf":
                     content = parse_pdf(file_upload)
-                elif file_upload.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-                    content = parse_word(file_upload)
                 else:
-                    st.error("Unsupported file type.")
-                    st.stop()
+                    raw_content = file_upload.read()
+                    encoding = chardet.detect(raw_content)['encoding']
+                    content = raw_content.decode(encoding)
 
                 st.session_state['knowledge_base'].append({"format": file_upload.type, "content": content})
                 st.success("Added file to Knowledge Base")
@@ -252,7 +268,7 @@ def main() -> None:
                             )
                             st.markdown(response)
                         else:
-                            st.warning("Please upload a PDF file or add a URL first.")
+                            st.warning("Please upload a file or add a URL first.")
 
                 if st.session_state["vector_db"] is not None:
                     st.session_state["messages"].append({"role": "assistant", "content": response})
@@ -260,9 +276,9 @@ def main() -> None:
             except Exception as e:
                 st.error(e, icon="⛔️")
                 logger.error(f"Error processing prompt: {e}")
-        else:
-            if st.session_state["vector_db"] is None:
-                st.warning("Upload a PDF file or add a URL to begin chat...")
+
+    if st.session_state["vector_db"] is None:
+        st.warning("Upload a file or add a URL to begin chat...")
 
     # Configuration for integrations
     st.subheader("Configure Your Chatbot")
