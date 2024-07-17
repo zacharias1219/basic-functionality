@@ -67,15 +67,14 @@ def extract_model_names(models_info: Dict[str, List[Dict[str, Any]]]) -> Tuple[s
     logger.info(f"Extracted model names: {model_names}")
     return model_names
 
-def create_vector_db(file_upload) -> Chroma:
-    logger.info(f"Creating vector DB from file upload: {file_upload.name}")
+def create_vector_db(content: str) -> Chroma:
+    logger.info("Creating vector DB from content")
     temp_dir = tempfile.mkdtemp()
 
-    path = os.path.join(temp_dir, file_upload.name)
-    with open(path, "wb") as f:
-        f.write(file_upload.getvalue())
-        logger.info(f"File saved to temporary path: {path}")
-        loader = UnstructuredPDFLoader(path)
+    with open(os.path.join(temp_dir, "temp.txt"), "w") as f:
+        f.write(content)
+        logger.info("Content saved to temporary file")
+        loader = UnstructuredPDFLoader(os.path.join(temp_dir, "temp.txt"))
         data = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=7500, chunk_overlap=100)
@@ -147,7 +146,7 @@ def delete_vector_db(vector_db: Optional[Chroma]) -> None:
     logger.info("Deleting vector DB")
     if vector_db is not None:
         vector_db.delete_collection()
-        st.session_state.pop("pdf_pages", None)
+        st.session_state.pop("url_text", None)
         st.session_state.pop("file_upload", None)
         st.session_state.pop("vector_db", None)
         st.success("Collection and temporary files deleted successfully.")
@@ -160,11 +159,13 @@ def delete_vector_db(vector_db: Optional[Chroma]) -> None:
 def main() -> None:
     st.header("🧠 Auto Serve", anchor=False)
     st.subheader("Automate your chatbot creation. Test the models first to see which one you like.", divider="rainbow")
-    input1,input2 = st.columns([1.5, 2])
+    input1, input2 = st.columns([1.5, 2])
     with input1:
-       name = st.text_input("Name")
+        name = st.text_input("Name")
     with input2:
         email = st.text_input("Email")
+
+    st.divider()
 
     col1, col2 = st.columns([1.5, 2])
 
@@ -193,14 +194,13 @@ def main() -> None:
         )
         st.session_state["selected_model"] = selected_model
 
-    
-
     with col1:
         file_upload = st.file_uploader("Upload a PDF file ↓", type=["pdf", "docx", "txt"], accept_multiple_files=False)
         if file_upload:
             st.session_state["file_upload"] = file_upload
             if st.session_state["vector_db"] is None:
-                st.session_state["vector_db"] = create_vector_db(file_upload)
+                content = file_upload.read().decode("utf-8")
+                st.session_state["vector_db"] = create_vector_db(content)
 
         if st.button("Add File to Knowledge Base"):
             if file_upload:
@@ -218,15 +218,12 @@ def main() -> None:
         url_upload = st.text_input("Enter a URL ↓")
 
         if st.button("Add URL to Knowledge Base"):
-            url_text=""
             if url_upload:
-                st.session_state["url_upload"] = url_upload
                 content = parse_website(url_upload)
-                url_text+=content
-                if st.session_state["vector_db"] is None:
-                    st.session_state["vector_db"] = create_vector_db(url_text)
                 st.session_state['knowledge_base'].append({"name": url_upload, "content": content})
                 st.session_state['url_text'] += content + "\n"
+                if st.session_state["vector_db"] is None:
+                    st.session_state["vector_db"] = create_vector_db(st.session_state['url_text'])
                 st.success("Added URL to Knowledge Base")
 
         delete_collection = col1.button("⚠️ Delete collection", type="secondary")
@@ -255,7 +252,7 @@ def main() -> None:
                             )
                             st.markdown(response)
                         else:
-                            st.warning("Please upload a PDF file first.")
+                            st.warning("Please upload a PDF file or add a URL first.")
 
                 if st.session_state["vector_db"] is not None:
                     st.session_state["messages"].append({"role": "assistant", "content": response})
@@ -265,7 +262,7 @@ def main() -> None:
                 logger.error(f"Error processing prompt: {e}")
         else:
             if st.session_state["vector_db"] is None:
-                st.warning("Upload a PDF file to begin chat...")
+                st.warning("Upload a PDF file or add a URL to begin chat...")
 
     # Configuration for integrations
     st.subheader("Configure Your Chatbot")
