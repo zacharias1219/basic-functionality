@@ -33,8 +33,11 @@ if pinecone_index_name not in pc.list_indexes().names():
 pinecone_index = pc.Index(pinecone_index_name)
 
 # Initialize embedding model
-embedding_model = AutoModel.from_pretrained('jinaai/jina-embeddings-v2-base-en', trust_remote_code=True)
-tokenizer = AutoTokenizer.from_pretrained('jinaai/jina-embeddings-v2-base-en', trust_remote_code=True)
+model_name = 'jinaai/jina-embeddings-v2-base-en'
+revision = 'specific-revision-or-commit-hash'
+
+embedding_model = AutoModel.from_pretrained(model_name, revision=revision, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(model_name, revision=revision, trust_remote_code=True)
 
 def create_rag_bot(data, model):
     for item in data:
@@ -80,4 +83,4 @@ def interact_with_rag_bot(user_query, model):
         ]
     )
 
-    return response['choices'][0]['message']['content']
+    return response['choices'][0].message['content']
