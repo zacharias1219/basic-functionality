@@ -6,8 +6,145 @@ integrations:
     user_id: ''
   salesforce:
     user_id: ''
-knowledge_base: []
-model: llama3
+knowledge_base:
+- content: "Intel Unnati Project Report \nProject Title: Intel Products Sentiment\
+    \ Analysis from Online \nReviews \n \nWeb Scraping with Selenium \nWeb scraping\
+    \ is when one automates the collection of content and data from websites by \n\
+    extracting the underlying HTML code. This technique differs from screen scraping,\
+    \ which \ncaptures what is displayed visually on the screen. The importance of\
+    \ data analysis has grown \nalongside the availability of huge volumes of raw\
+    \ data hence resulting in development of \nspecialized Python packages that simplify\
+    \ web scraping. \nSelenium  as an open-source project provides a range of tools\
+    \ and  libraries  for browser \nautomation. Among them is a playback tool (Selenium\
+    \ IDE) that allows creation of test for \nmost modern browsers without any knowledge\
+    \ about specific scripting languages necessary \nfor testing. With Selenium web\
+    \ scraping, automated gathering of essential information through \nSelenium WebDriver\
+    \ Browser Automation is possible. \nFor example, Selenium web scrapers can extract\
+    \ data from following Amazon review pages \nfor Intel products: \nIntel Core i5-12500\
+    \ Processor \nIntel i3-13300 Desktop Processor \nIntel i5-13500 Desktop Processor\
+    \ \nIntel i7-13700 Desktop Processor \nUsing selenium for web scraping makes the\
+    \ extraction process easier and speeds up collecting \nand analysing review data\
+    \ from several pages. \nData Preprocessing \nFeatures Offered \nThe dataset has\
+    \ columns named title, description and sentiment. Usually, in the title column,\
+    \ a \nbrief description is given of the review provided by the client that may\
+    \ often indicate either \nproduct names or satisfaction degree. The description\
+    \ column is for writing more about the \nproduct; it includes things like features,\
+    \ performance, quality and customer experiences and comments on another level.\
+    \ It goes further to provide an analysis based on usability, reliability \namong\
+    \ other factors as well as giving an overall evaluation of what customers think.\
+    \ \nThis project uses TextBlob to analyze sentiment from different Intel products\
+    \ reviews. Reviews \nare classified into positive, negative or neutral by polarity\
+    \ scores using TextBlob: a score above \n0 indicates positive while below zero\
+    \ represets negative while a score equaling zero means \nneural. It also allows\
+    \ user to identify whether each review was positive, negative or neutral \nthrough\
+    \ its broad sentiment score. \nLoading the Data(Data Collection) \nVarious Amazon\
+    \ links were used to obtain Intel product reviews. This data was scraped from\
+    \ \nmultiple  pages  and  loaded  into  a  CSV  file  for  more  analysis  purposes.\
+    \  The \nmerged_amazon_reviews.csv file consists of columns \u2013 title; rating\
+    \ and description. \nOn this ground, rating column which shows overall rate given\
+    \ by customer has been removed \ndue to repetition. \nA sentiment column was added\
+    \ to the dataset using TextBlob so as to show if any review is \npositive or not\
+    \ (or if some are neutral). The words in the review help determine its sentiment.\
+    \ \nTextBlob detects and classifies the sentiment, enabling a count of positive\
+    \ and negative reviews \nto assess the product's overall sentiment.  \n \nData\
+    \ Cleaning  \nThe  raw  data  extracted  from  Amazon  review  pages  is  cleaned\
+    \  for  efficient  processing. \nUnwanted elements such as lowercase letters and\
+    \ special characters are removed. Non-English \nreviews are eliminated, and English\
+    \ reviews are corrected for grammatical and vocabulary \nerrors. Common English\
+    \ words like \"a\" and \"the\" are removed. Emojis are converted to text \nformat.\
+    \ \n \nExploratory Data Analysis\n \n \nThis dataset is organized into title,\
+    \ description and sentiment columns where TextBlob \nuses it to classify Intel\
+    \ product reviews into positive, negative or neutral categories based on \npolarity\
+    \ scores. \nExploratory Data Analysis (EDA) also includes sentiment score distributions\
+    \ analysis, word \nfrequencies and correlations between review length and sentiment.\
+    \ These visualizations \ninclude histograms, bar charts, and word clouds which\
+    \ show patterns and common themes in \nthe data. EDA provides useful insights\
+    \ into pattern of the data for guiding further analysis and \nmodeling. \n Random\
+    \ Forest Classification\n \n \nA powerful and flexible machine learning algorithm\
+    \ known as Random Forest Classification \n(RFC) is what this paper is about. \n\
+    It involves creating multiple decision trees during training phase and obtaining\
+    \ the mode of \nthe classes (classification) of the individual trees. This ensemble\
+    \ approach helps to reduce \noverfitting and increase accuracy hence making RFC\
+    \ one of the most effective algorithms in \na wide variety of projects. \n \n\
+    The RFC technique operates by constructing a set of randomly created decision\
+    \ trees that are \neach based on random subsets of data. During classification,\
+    \ each individual tree produces a \nclass prediction, with the final prediction\
+    \ being determined by majority voting across all \ntrees. This method improves\
+    \ this model\u2019s robustness together with its accuracy by mitigating \nany\
+    \ variance that may be caused by single tree. \n \nIn this project, we have chosen\
+    \ RFC because it is more efficient and performs better than \nother tools. Its\
+    \ ability to handle high-dimensional large datasets and its resistance against\
+    \ \noverfitting positions it as an appropriate choice. With RFC we have been able\
+    \ to achieve high \naccuracy and reliability in our classification tasks so that\
+    \ precise and dependable results can \nbe obtained. \nConclusion \nOur analysis\
+    \ on customer reviews of Intel products benefited from the use of Selenium for\
+    \ web \nscraping, TextBlob for sentiment analysis and RFC for classification.\
+    \ From this analysis, we \nhave been able to obtain insights that give an overall\
+    \ picture of how customers feel about Intel\u2019s \nproducts. These insights\
+    \ are crucial in making informed business decisions that improve \nproduct strategies.\
+    \ Additionally, this project demonstrates the need to marry web scraping with\
+    \ \nadvanced data analysis techniques in order to extract meaningful insights\
+    \ from big data. "
+  format: application/pdf
+- content: "Intel\xAE Unnati Program\nSkip To Main Content\nToggle Navigation\nSign\
+    \ In\nMy Intel\nMy Tools\n?\nSign Out\nUSA (English)\nSelect Your Language\nBahasa\
+    \ Indonesia\nDeutsch\nEnglish\nEspa\xF1ol\nFran\xE7ais\nPortugu\xEAs\nTi\xEA\u0301\
+    ng Vi\xEA\u0323t\n\u0E44\u0E17\u0E22\n\uD55C\uAD6D\uC5B4\n\u65E5\u672C\u8A9E\n\
+    \u7B80\u4F53\u4E2D\u6587\n\u7E41\u9AD4\u4E2D\u6587\nToggle Search\nSearch\n<\n\
+    Close Search Panel\nAdvanced Search\nclose\nSign In\nto access restricted content\n\
+    Using Intel.com Search\nYou can easily search the entire Intel.com site in several\
+    \ ways.\nBrand Name:\nCore i9\nDocument Number:\n123456\nCode Name:\nEmerald Rapids\n\
+    Special Operators:\n\u201CIce Lake\u201D, Ice AND Lake, Ice OR Lake, Ice*\nQuick\
+    \ Links\nYou can also try the quick links below to see results for most popular\
+    \ searches.\nProduct Information\nSupport\nDrivers & Software\nRecent Searches\n\
+    Sign In\nto access restricted content\nAdvanced Search\nAll of these terms\nAny\
+    \ of these terms\nExact term only\nFind results with\nAll Results\nProduct Information\n\
+    Support\nDrivers & Software\nDocumentation & Resources\nPartners\nCommunities\n\
+    Corporate\nShow results from\nOnly search in\nTitle\nDescription\nContent ID\n\
+    Search\nSign in\nto access\nrestricted content.\nIntel\xAE Unnati Program\nThe\
+    \ browser version you are using is not recommended for this site.\nPlease consider\
+    \ upgrading to the latest version of your browser by clicking one of the following\
+    \ links.\nSafari\nChrome\nEdge\nFirefox\nIntel\xAE Unnati: Data-Centric Labs in\
+    \ Emerging Technologies\nGiving Students the Intel Edge\nContact Us\nHave some\
+    \ queries you want answered? Talk to us.\nYour registration cannot proceed. The\
+    \ materials on this site are subject to U.S. and other applicable export control\
+    \ laws and are not accessible from all locations.\nGo to:\nOverview\nSolutions\n\
+    Resources\nCommunity\nIndustrial Training Program\nIntel\xAE Unnati India Technology\
+    \ Labs\nThere is a growing skill gap witnessed today between graduates from technical\
+    \ fields and the expectations of the IT industry. The government of India along\
+    \ with various institutes have launched several initiatives over the years to\
+    \ enable India\u2019s transformational journey and bridge the growing skill gap.\
+    \ In its\nNational Education Policy 2020\nthe government stressed on the need\
+    \ to enhance the curriculum for higher education to better equip the faculties\
+    \ and graduating students with industry relevant data-centric skills.\nWith education\
+    \ as a focus, Intel has launched multiple programs over the last 20 years for\
+    \ students pursuing higher education. The newly launched\nIntel\xAE Unnati Program\n\
+    , is designed to help students keep pace with the fast-changing needs and expectations\
+    \ of the industry pushing Intel\u2019s education agenda further.\nEmpowering Students\
+    \ with Industry Leading Labs\nIntel Unnati labs include hardware and software\
+    \ stack recommendations from Intel experts, sample course content including hands\
+    \ on exercises and co-branded course completion certificates for students. Currently,\
+    \ the program offers institutes an opportunity to set up world class technology\
+    \ labs in four emerging technology areas:\nArtificial Intelligence (AI) Labs\n\
+    FPGA Solutions Labs\nAI Internet of Things (AIIoT) Labs\nApplied AI Labs\nHigh\
+    \ Performance Computing (HPC) Labs\nDeep Learning Labs\nSecurity Labs\nShow more\n\
+    Show less\nLearn more \u203A\nOEM Partners\nSystem Integrators Associated with\
+    \ the Program\nContact Us\nHave some queries you want answered?\nTalk to us\n\
+    1\nhttps://meity.gov.in/writereaddata/files/india_trillion-dollar_digital_opportunity.pdf\n\
+    Company Information\nOur Commitment\nDiversity & Inclusion\nInvestor Relations\n\
+    Contact Us\nNewsroom\nSite Map\nJobs\n\xA9 Intel Corporation\nTerms of Use\n*Trademarks\n\
+    Cookies\nPrivacy\nSupply Chain Transparency\nDo Not Share My Personal Information\n\
+    California Consumer Privacy Act (CCPA) Opt-Out Icon\nIntel technologies may require\
+    \ enabled hardware, software or service activation. // No product or component\
+    \ can be absolutely secure. // Your costs and results may vary. // Performance\
+    \ varies by use, configuration and other factors. // See our complete\nlegal notices\
+    \ and disclaimers\n. // Intel is committed to respecting human rights and avoiding\
+    \ complicity in human rights abuses. See Intel\u2019s\nGlobal Human Rights Principles\n\
+    . Intel\u2019s products and software are intended only to be used in applications\
+    \ that do not cause or contribute to a violation of an internationally recognized\
+    \ human right."
+  name: https://www.intel.in/content/www/in/en/corporate/unnati/overview.html
+model: gemma-7b-it
 name: Richard
 settings:
   language: english

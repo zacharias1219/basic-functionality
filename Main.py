@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import yaml
 from utils.parser import parse_pdf, parse_word, parse_website
-from utils.bot import store_chatbot_config
+from utils.bot import store_chatbot_config, create_rag_bot
 from utils.mail import send_verification_email
 
 # Page setup
@@ -54,7 +54,7 @@ if st.button("Add URL to Knowledge Base"):
 
 # Model configuration
 st.header("Configure Your Chatbot")
-model = st.selectbox("Choose AI Model", ["llama3", "gemma2" , "qwen2", "mistral"])
+model = st.selectbox("Choose AI Model", ["gemma-7b-it", "llama3", "gemma2" , "qwen2", "mistral"])
 language = st.selectbox("Language", ["English", "French", "German", "Spanish"])
 tone = st.selectbox("Tone", ["Friendly", "Professional", "Casual"])
 
@@ -101,6 +101,10 @@ if st.button('Submit'):
     st.write("You can add more files/URLs or change any configuration.")
     chatbot_id = store_chatbot_config(chatbot_config)
     st.write(f"Chatbot created with ID: {chatbot_id}")
+    
+    # Create RAG bot
+    create_rag_bot(chatbot_config['knowledge_base'], model)
+    
     if st.button('Verify and Submit'):
         # Storing the parameters
         response = requests.post('http://localhost:8000/api/create_chatbot', json=chatbot_config)
@@ -109,6 +113,7 @@ if st.button('Submit'):
             st.write("A verification email has been sent to you.")
         else:
             st.error("Failed to submit chatbot configuration.")
+    
     # Sending verification email
     mail_status = send_verification_email(name, email, chatbot_id)
     st.success(mail_status)

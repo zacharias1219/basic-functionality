@@ -13,4 +13,5 @@ PyPDF2
 pdfplumber
 pymongo
 groq
-chromadb
+transformers
+pinecone-client
