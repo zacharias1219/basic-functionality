@@ -11,3 +11,4 @@ python-dotenv
 langchain_community
 langchain_text_splitters
 unstructured
+chromadb
