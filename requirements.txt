@@ -12,3 +12,4 @@ langchain_community
 langchain_text_splitters
 unstructured
 chromadb
+protobuf==3.20.3
