@@ -22,7 +22,7 @@ from langchain_community.vectorstores import Chroma
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain.retrievers.multi_query import MultiQueryRetriever
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import Runnable, RunnablePassthrough
 
 # Page setup
 st.set_page_config(page_title="Autoserve", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
@@ -73,28 +73,60 @@ def create_vector_db(content: str) -> Chroma:
     logger.info("Creating vector DB from content")
     temp_dir = tempfile.mkdtemp()
 
-    with open(os.path.join(temp_dir, "temp.txt"), "w", encoding='utf-8') as f:
-        f.write(content)
-        logger.info("Content saved to temporary file")
+    try:
+        with open(os.path.join(temp_dir, "temp.txt"), "w", encoding='utf-8') as f:
+            f.write(content)
+            logger.info("Content saved to temporary file")
+        
         loader = UnstructuredFileLoader(os.path.join(temp_dir, "temp.txt"))
         data = loader.load()
+        logger.info(f"Loaded data: {data}")
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=7500, chunk_overlap=100)
-    chunks = text_splitter.split_documents(data)
-    logger.info("Document split into chunks")
+        if not data:
+            raise ValueError("No data loaded from the file.")
 
-    embeddings = OllamaEmbeddings(model="nomic-embed-text", show_progress=True)
-    vector_db = Chroma.from_documents(
-        documents=chunks, embedding=embeddings, collection_name="myRAG"
-    )
-    logger.info("Vector DB created")
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=7500, chunk_overlap=100)
+        chunks = text_splitter.split_documents(data)
+        logger.info(f"Document split into chunks: {chunks}")
 
-    shutil.rmtree(temp_dir)
-    logger.info(f"Temporary directory {temp_dir} removed")
+        if not chunks:
+            raise ValueError("No chunks created from the document.")
+
+        try:
+            embeddings = OllamaEmbeddings(model="nomic-embed-text", show_progress=True)
+            vector_db = Chroma.from_documents(
+                documents=chunks, embedding=embeddings, collection_name="myRAG"
+            )
+            logger.info("Vector DB created")
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Connection error: {e}")
+            st.error("Failed to connect to the embedding service. Please ensure it is running and try again.")
+            return None
+    finally:
+        shutil.rmtree(temp_dir)
+        logger.info(f"Temporary directory {temp_dir} removed")
+    
     return vector_db
 
+class GroqRunnable(Runnable):
+    def __init__(self, client: Groq):
+        self.client = client
+
+    def invoke(self, *args, **kwargs) -> str:
+        input_data = str(args[0])  # Ensure the input data is a string
+        response = self.client.chat.completions.create(
+            messages=[
+                {"role": "user", "content": input_data}
+            ],
+            model="llama3-8b-8192",  # Use the correct model key
+            temperature=0.7,
+            max_tokens=256,
+            top_p=1
+        )
+        return response.choices[0].message.content
+
 def process_question(question: str, vector_db: Chroma, selected_model: str) -> str:
-    logger.info(f"""Processing question: {question} using model: {selected_model}""")
+    logger.info(f"Processing question: {question} using model: {selected_model}")
 
     QUERY_PROMPT = PromptTemplate(
         input_variables=["question"],
@@ -107,7 +139,7 @@ def process_question(question: str, vector_db: Chroma, selected_model: str) -> s
     )
 
     retriever = MultiQueryRetriever.from_llm(
-        vector_db.as_retriever(), client, prompt=QUERY_PROMPT
+        vector_db.as_retriever(), GroqRunnable(client), prompt=QUERY_PROMPT
     )
 
     template = """Answer the question based ONLY on the following context:
@@ -123,7 +155,7 @@ def process_question(question: str, vector_db: Chroma, selected_model: str) -> s
     chain = (
         {"context": retriever, "question": RunnablePassthrough()}
         | prompt
-        | client
+        | GroqRunnable(client)
         | StrOutputParser()
     )
 
@@ -140,7 +172,7 @@ def parse_website(url):
 
     # Remove excessive gaps
     lines = [line.strip() for line in text.split('\n') if line.strip()]
-    cleaned_text = '\n'.join(lines)
+    cleaned_text = '\n.join(lines)'
 
     return cleaned_text
 
@@ -179,7 +211,7 @@ def main() -> None:
             'hubspot': '',
             'mailchimp': '',
             'salesforce': ''
-        }
+    }
 
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
@@ -279,6 +311,8 @@ def main() -> None:
 
     if st.session_state["vector_db"] is None:
         st.warning("Upload a file or add a URL to begin chat...")
+
+    st.divider()
 
     # Configuration for integrations
     st.subheader("Configure Your Chatbot")
