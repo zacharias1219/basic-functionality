@@ -10,6 +10,10 @@ from groq import Groq
 from typing import List, Any, Optional, Dict, Tuple
 import chardet
 import pdfplumber
+import nltk
+
+nltk.download('punkt')
+
 
 from utils.bot import store_chatbot_config
 from utils.mail import send_verification_email
